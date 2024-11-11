@@ -1,73 +1,73 @@
-const VariantBase64Table =
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=".split("");
+const VariantBase64Table = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='.split('');
 const VariantBase64Dict = {};
-VariantBase64Table.forEach((val, i) => (VariantBase64Dict[i] = val));
+VariantBase64Table.forEach((val, i) => VariantBase64Dict[i] = val);
 const VariantBase64ReverseDict = {};
-VariantBase64Table.forEach((val, i) => (VariantBase64ReverseDict[val] = i));
+VariantBase64Table.forEach((val, i) => VariantBase64ReverseDict[val] = i);
 
 /** license 类型 */
 const LicenseType = {
-  Professional: 1,
-  Educational: 3,
-  Personal: 4,
-};
+    Professional: 1,
+    Educational: 3,
+    Personal: 4
+}
 
 /**
  * byte[] 进行 base64 编码
- * @param {array[Number]} bs
- * @returns
+ * @param {array[Number]} bs 
+ * @returns 
  */
 function VariantBase64Encode(bs) {
-  let result = [];
-  let blocks_count = Math.floor(bs.length / 3);
-  let left_bytes = bs.length % 3;
+    let result = [];
+    let blocks_count = Math.floor(bs.length / 3);
+    let left_bytes = bs.length % 3;
 
-  let coding_int, block;
-  for (let i = 0; i < blocks_count; i++) {
-    coding_int = bs.slice(3 * i, 3 * i + 3).toInt();
-    //coding_int = int.from_bytes(bs[3 * i: 3 * i + 3], 'little');
-    block = VariantBase64Dict[coding_int & 0x3f];
-    block += VariantBase64Dict[(coding_int >> 6) & 0x3f];
-    block += VariantBase64Dict[(coding_int >> 12) & 0x3f];
-    block += VariantBase64Dict[(coding_int >> 18) & 0x3f];
-    result = result.concat(block.toBytes());
-  }
+    let coding_int, block;
+    for (let i = 0; i < blocks_count; i++) {
+        coding_int = bs.slice(3 * i, 3 * i + 3).toInt();
+        //coding_int = int.from_bytes(bs[3 * i: 3 * i + 3], 'little');
+        block = VariantBase64Dict[coding_int & 0x3f];
+        block += VariantBase64Dict[(coding_int >> 6) & 0x3f];
+        block += VariantBase64Dict[(coding_int >> 12) & 0x3f];
+        block += VariantBase64Dict[(coding_int >> 18) & 0x3f];
+        result = result.concat(block.toBytes());
+    }
 
-  switch (left_bytes) {
-    case 0:
-      return result;
-    case 1:
-      coding_int = bs.slice(3 * blocks_count).toInt();
-      block = VariantBase64Dict[coding_int & 0x3f];
-      block += VariantBase64Dict[(coding_int >> 6) & 0x3f];
-      result = result.concat(block.toBytes());
-      return result;
-    default:
-      coding_int = bs.slice(3 * blocks_count).toInt();
-      block = VariantBase64Dict[coding_int & 0x3f];
-      block += VariantBase64Dict[(coding_int >> 6) & 0x3f];
-      block += VariantBase64Dict[(coding_int >> 12) & 0x3f];
-      result = result.concat(block.toBytes());
-      return result;
-  }
+    switch (left_bytes) {
+        case 0:
+            return result;
+        case 1:
+            coding_int = bs.slice(3 * blocks_count).toInt();
+            block = VariantBase64Dict[coding_int & 0x3f];
+            block += VariantBase64Dict[(coding_int >> 6) & 0x3f];
+            result = result.concat(block.toBytes());
+            return result;
+        default:
+            coding_int = bs.slice(3 * blocks_count).toInt();
+            block = VariantBase64Dict[coding_int & 0x3f];
+            block += VariantBase64Dict[(coding_int >> 6) & 0x3f];
+            block += VariantBase64Dict[(coding_int >> 12) & 0x3f];
+            result = result.concat(block.toBytes());
+            return result;
+    }
 }
 
+
 function EncryptBytes(key, bs) {
-  let result = [];
-  bs.forEach((val) => {
-    result.push(val ^ ((key >> 8) & 0xff));
-    key = (result[-1] & key) | 0x482d;
-  });
-  return result;
+    let result = [];
+    bs.forEach(val => {
+        result.push(val ^ ((key >> 8) & 0xff))
+        key = result[-1] & key | 0x482D
+    });
+    return result;
 }
 
 function DecryptBytes(key, bs) {
-  let result = [];
-  bs.forEach((val) => {
-    result.push(val ^ ((key >> 8) & 0xff));
-    key = (val & key) | 0x482d;
-  });
-  return result;
+    let result = [];
+    bs.forEach(val => {
+        result.push(val ^ ((key >> 8) & 0xff));
+        key = val & key | 0x482D;
+    });
+    return result;
 }
 
 /**
@@ -76,75 +76,75 @@ function DecryptBytes(key, bs) {
  * @returns byte[] 转换成的 init
  */
 Array.prototype.toInt = function (offset = 0) {
-  let value =
-    (this[offset] & 0xff) |
-    ((this[offset + 1] & 0xff) << 8) |
-    ((this[offset + 2] & 0xff) << 16) |
-    ((this[offset + 3] & 0xff) << 24);
-  return value;
-};
+    let value = ((this[offset] & 0xFF)
+        | ((this[offset + 1] & 0xFF) << 8)
+        | ((this[offset + 2] & 0xFF) << 16)
+        | ((this[offset + 3] & 0xFF) << 24)
+    );
+    return value;
+}
 
 /**
  * byte[] 转回字符串
  */
 Array.prototype.bytesToStr = function () {
-  var str = "",
-    _arr = this;
-  for (var i = 0; i < _arr.length; i++) {
-    var one = _arr[i].toString(2),
-      v = one.match(/^1+?(?=0)/);
-    if (v && one.length == 8) {
-      var bytesLength = v[0].length;
-      var store = _arr[i].toString(2).slice(7 - bytesLength);
-      for (var st = 1; st < bytesLength; st++) {
-        store += _arr[st + i].toString(2).slice(2);
-      }
-      str += String.fromCharCode(parseInt(store, 2));
-      i += bytesLength - 1;
-    } else {
-      str += String.fromCharCode(_arr[i]);
+    var str = '',
+        _arr = this;
+    for (var i = 0; i < _arr.length; i++) {
+        var one = _arr[i].toString(2),
+            v = one.match(/^1+?(?=0)/);
+        if (v && one.length == 8) {
+            var bytesLength = v[0].length;
+            var store = _arr[i].toString(2).slice(7 - bytesLength);
+            for (var st = 1; st < bytesLength; st++) {
+                store += _arr[st + i].toString(2).slice(2);
+            }
+            str += String.fromCharCode(parseInt(store, 2));
+            i += bytesLength - 1;
+        } else {
+            str += String.fromCharCode(_arr[i]);
+        }
     }
-  }
-  return str;
-};
+    return str;
+}
 
 /**
  * 字符串转 btye[]
  */
 String.prototype.toBytes = function () {
-  var bytes = new Array();
-  var len, char;
-  len = this.length;
-  for (var i = 0; i < len; i++) {
-    char = this.charCodeAt(i);
-    if (char >= 0x010000 && char <= 0x10ffff) {
-      bytes.push(((char >> 18) & 0x07) | 0xf0);
-      bytes.push(((char >> 12) & 0x3f) | 0x80);
-      bytes.push(((char >> 6) & 0x3f) | 0x80);
-      bytes.push((char & 0x3f) | 0x80);
-    } else if (char >= 0x000800 && char <= 0x00ffff) {
-      bytes.push(((char >> 12) & 0x0f) | 0xe0);
-      bytes.push(((char >> 6) & 0x3f) | 0x80);
-      bytes.push((char & 0x3f) | 0x80);
-    } else if (char >= 0x000080 && char <= 0x0007ff) {
-      bytes.push(((char >> 6) & 0x1f) | 0xc0);
-      bytes.push((char & 0x3f) | 0x80);
-    } else {
-      bytes.push(char & 0xff);
+    var bytes = new Array();
+    var len, char;
+    len = this.length;
+    for (var i = 0; i < len; i++) {
+        char = this.charCodeAt(i);
+        if (char >= 0x010000 && char <= 0x10FFFF) {
+            bytes.push(((char >> 18) & 0x07) | 0xF0);
+            bytes.push(((char >> 12) & 0x3F) | 0x80);
+            bytes.push(((char >> 6) & 0x3F) | 0x80);
+            bytes.push((char & 0x3F) | 0x80);
+        } else if (char >= 0x000800 && char <= 0x00FFFF) {
+            bytes.push(((char >> 12) & 0x0F) | 0xE0);
+            bytes.push(((char >> 6) & 0x3F) | 0x80);
+            bytes.push((char & 0x3F) | 0x80);
+        } else if (char >= 0x000080 && char <= 0x0007FF) {
+            bytes.push(((char >> 6) & 0x1F) | 0xC0);
+            bytes.push((char & 0x3F) | 0x80);
+        } else {
+            bytes.push(char & 0xFF);
+        }
     }
-  }
-  return bytes;
-};
+    return bytes;
+}
 
 /**
- * @param {Number} type license类型
- * @param {string} userName 用户名
- * @param {Number} count license支持的用户数量
- * @param {Number} majorVersion 大版本号 如 21.0 即为 21
- * @param {Number} minorVersion 小版本号 如 21.0 即为 0
- */
+* @param {Number} type license类型
+* @param {string} userName 用户名
+* @param {Number} count license支持的用户数量
+* @param {Number} majorVersion 大版本号 如 21.0 即为 21
+* @param {Number} minorVersion 小版本号 如 21.0 即为 0
+*/
 function generateLicense(type, userName, count, majorVersion, minorVersion) {
-  /* 
+    /* 
     LicenseString = '%d#%s|%d%d#%d#%d3%d6%d#%d#%d#%d#' % (
     Type,
     UserName, 
@@ -156,10 +156,8 @@ function generateLicense(type, userName, count, majorVersion, minorVersion) {
     0) # No Plugins flag. 0 means "NoPlugins = false". But it does not work. 
     */
 
-  let licenseSourceStr = `${type}#${userName}|${majorVersion}${minorVersion}#${count}#${majorVersion}3${minorVersion}6${minorVersion}#0#0#0#`;
-  return VariantBase64Encode(
-    EncryptBytes(0x787, licenseSourceStr.toBytes())
-  ).bytesToStr();
+    let licenseSourceStr = `${type}#${userName}|${majorVersion}${minorVersion}#${count}#${majorVersion}3${minorVersion}6${minorVersion}#0#0#0#`;
+    return VariantBase64Encode(EncryptBytes(0x787, licenseSourceStr.toBytes())).bytesToStr();
 }
 
-export { LicenseType, generateLicense };
+export { LicenseType, generateLicense }
